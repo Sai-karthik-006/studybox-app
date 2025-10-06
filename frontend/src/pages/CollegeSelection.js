@@ -1,0 +1,126 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Common/Header';
+import CollegeGrid from '../components/College/CollegeGrid';
+import { getColleges } from '../utils/api';
+import { FaSearch, FaUniversity } from 'react-icons/fa';
+
+const CollegeSelection = () => {
+  const [colleges, setColleges] = useState([]);
+  const [filteredColleges, setFilteredColleges] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchColleges();
+  }, []);
+
+  useEffect(() => {
+    const filtered = colleges.filter(college =>
+      college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      college.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredColleges(filtered);
+  }, [searchTerm, colleges]);
+
+  const fetchColleges = async () => {
+    try {
+      const response = await getColleges();
+      if (response.data && response.data.success) {
+        setColleges(response.data.data);
+        setFilteredColleges(response.data.data);
+      } else {
+        // Fallback to mock data if API fails
+        const mockColleges = [
+          {
+            _id: '1',
+            name: 'ANITS',
+            description: 'Anil Neerukonda Institute of Technology & Sciences',
+            code: 'ANITS'
+          },
+          {
+            _id: '2', 
+            name: 'Andhra University',
+            description: 'Andhra University College of Engineering',
+            code: 'AU'
+          }
+        ];
+        setColleges(mockColleges);
+        setFilteredColleges(mockColleges);
+      }
+    } catch (error) {
+      console.error('Error fetching colleges:', error);
+      // Fallback to mock data
+      const mockColleges = [
+        {
+          _id: '1',
+          name: 'ANITS',
+          description: 'Anil Neerukonda Institute of Technology & Sciences',
+          code: 'ANITS'
+        }
+      ];
+      setColleges(mockColleges);
+      setFilteredColleges(mockColleges);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCollegeSelect = (college) => {
+    navigate('/branches', { state: { college } });
+  };
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <Header />
+        <div className="loading-container">
+          <FaUniversity className="loading-icon" />
+          <p>Loading colleges...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-container">
+      <Header />
+      
+      <div className="page-content">
+        <div className="page-header">
+          <h1>Select Your College</h1>
+          <p>Choose your college to access relevant study materials</p>
+        </div>
+
+        <div className="search-container">
+          <div className="search-box">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search colleges..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
+        </div>
+
+        <CollegeGrid 
+          colleges={filteredColleges} 
+          onCollegeSelect={handleCollegeSelect}
+        />
+
+        {filteredColleges.length === 0 && (
+          <div className="empty-state">
+            <FaUniversity className="empty-icon" />
+            <h3>No colleges found</h3>
+            <p>Try adjusting your search terms</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CollegeSelection;
