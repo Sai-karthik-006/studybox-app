@@ -66,6 +66,9 @@ export const deleteCollege = (collegeId) =>
 export const addBranch = (branchData) => 
   api.post('/admin/branch', branchData);
 
+export const getBranches = () =>
+  api.get('/student/branches');
+
 // Subject APIs
 export const getSubjectsBySemester = (semesterId) => 
   api.get(`/admin/semester/${semesterId}/subjects`);
