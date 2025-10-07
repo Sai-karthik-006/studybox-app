@@ -4,8 +4,9 @@ import DashboardStats from '../components/Admin/DashboardStats';
 import UserManagement from '../components/Admin/UserManagement';
 import ContentManagement from '../components/Admin/ContentManagement';
 import CollegeManagement from '../components/Admin/CollegeManagement';
+import BranchManagement from '../components/Admin/BranchManagement';
 import AdminProfile from './AdminProfile';
-import { FaTachometerAlt, FaUsers, FaBook, FaUniversity, FaSignOutAlt, FaBars, FaUserShield, FaCog } from 'react-icons/fa';
+import { FaTachometerAlt, FaUsers, FaBook, FaUniversity, FaSignOutAlt, FaBars, FaUserShield, FaCog, FaCode } from 'react-icons/fa';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -16,6 +17,7 @@ const AdminDashboard = () => {
     { id: 'dashboard', name: 'Dashboard', icon: FaTachometerAlt },
     { id: 'users', name: 'User Management', icon: FaUsers },
     { id: 'colleges', name: 'College Management', icon: FaUniversity },
+    { id: 'branches', name: 'Branch Management', icon: FaCode },
     { id: 'content', name: 'Content Management', icon: FaBook },
     { id: 'profile', name: 'Admin Profile', icon: FaUserShield }
   ];
@@ -57,6 +59,8 @@ const AdminDashboard = () => {
         return <UserManagement />;
       case 'colleges':
         return <CollegeManagement />;
+      case 'branches':
+        return <BranchManagement />;
       case 'content':
         return <ContentManagement />;
       case 'profile':
@@ -108,7 +112,7 @@ const AdminDashboard = () => {
             </div>
             <div className="admin-details">
               <span className="admin-name">{user?.firstName} {user?.lastName}</span>
-              <span className="admin-role">{user?.role}</span>
+              <span className="admin-role">{user?.role || 'Administrator'}</span>
               <span className="admin-email">{user?.email}</span>
             </div>
           </div>
@@ -143,6 +147,7 @@ const AdminDashboard = () => {
               {activeTab === 'dashboard' && 'Welcome back! Here is your dashboard overview.'}
               {activeTab === 'users' && 'Manage all users and their permissions.'}
               {activeTab === 'colleges' && 'Add, edit, and manage colleges in the system.'}
+              {activeTab === 'branches' && 'Manage and organize college branches.'}
               {activeTab === 'content' && 'Manage and approve study resources.'}
               {activeTab === 'profile' && 'Manage your administrator account settings.'}
             </p>
