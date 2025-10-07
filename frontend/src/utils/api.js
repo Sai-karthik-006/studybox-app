@@ -66,6 +66,21 @@ export const deleteCollege = (collegeId) =>
 export const addBranch = (branchData) => 
   api.post('/admin/branch', branchData);
 
+// Subject APIs
+export const getSubjectsBySemester = (semesterId) => 
+  api.get(`/admin/semester/${semesterId}/subjects`);
+
+export const addSubject = (semesterId, subjectData) => 
+  api.post(`/admin/semester/${semesterId}/subject`, subjectData);
+
+// Enhanced Resource APIs
+export const addResourceWithHierarchy = (subjectId, resourceData) => 
+  api.post(`/admin/subject/${subjectId}/resource`, resourceData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+
 // Resource Management APIs
 export const addResource = (resourceData) => 
   api.post('/admin/resource', resourceData);

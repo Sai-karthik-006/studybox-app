@@ -214,7 +214,7 @@ exports.deleteSubject = asyncHandler(async (req, res) => {
 });
 
 // ------------------------
-// Unit CRUD (Add these missing functions)
+// Unit CRUD
 // ------------------------
 exports.addUnit = asyncHandler(async (req, res) => {
   const { subjectId } = req.params;
@@ -244,7 +244,7 @@ exports.deleteUnit = asyncHandler(async (req, res) => {
 });
 
 // ------------------------
-// Topic CRUD (Add these missing functions)
+// Topic CRUD
 // ------------------------
 exports.addTopic = asyncHandler(async (req, res) => {
   const { subjectOrUnitId } = req.params;
@@ -284,89 +284,231 @@ exports.deleteTopic = asyncHandler(async (req, res) => {
 });
 
 // ------------------------
-// Resource CRUD
+// Enhanced Resource Management
 // ------------------------
+
+// Add resource with YouTube links and college association
 exports.addResource = asyncHandler(async (req, res) => {
-  const { topicId } = req.params;
-  const { title, summary, tags, difficulty, youtubeLinks } = req.body;
+  const { subjectId } = req.params;
+  const { 
+    title, 
+    description, 
+    tags, 
+    difficulty, 
+    youtubeLinks,
+    collegeId 
+  } = req.body;
 
-  const topic = await Topic.findById(topicId);
-  if (!topic) return errorResponse(res, "Topic not found", 404);
-
-  let pdfs = [];
-  if (req.files && req.files.length > 0) {
-    pdfs = await Promise.all(
-      req.files.map(async (file) => {
-        const url = await uploadToCloudinary(file);
-        return { url, filename: file.originalname };
-      })
-    );
+  // Validate subject exists
+  const subject = await Subject.findById(subjectId)
+    .populate('semester')
+    .populate('branch');
+  
+  if (!subject) {
+    return errorResponse(res, "Subject not found", 404);
   }
 
+  // Validate college exists
+  const college = await College.findById(collegeId);
+  if (!college) {
+    return errorResponse(res, "College not found", 404);
+  }
+
+  // Parse YouTube links
   let parsedYoutubeLinks = [];
   if (youtubeLinks) {
-    parsedYoutubeLinks = typeof youtubeLinks === "string" ? JSON.parse(youtubeLinks) : youtubeLinks;
+    try {
+      parsedYoutubeLinks = typeof youtubeLinks === 'string' 
+        ? JSON.parse(youtubeLinks) 
+        : youtubeLinks;
+    } catch (error) {
+      return errorResponse(res, "Invalid YouTube links format", 400);
+    }
+  } 
+
+  // Handle file uploads
+  let files = [];
+  if (req.files && req.files.length > 0) {
+    try {
+      files = await Promise.all(
+        req.files.map(async (file) => {
+          const url = await uploadToCloudinary(file);
+          return {
+            filename: `file_${Date.now()}`,
+            originalName: file.originalname,
+            url: url,
+            size: file.size,
+            fileType: file.mimetype
+          };
+        })
+      );
+    } catch (uploadError) {
+      return errorResponse(res, "File upload failed", 500);
+    }
   }
 
+  // Create resource
   const resource = await Resource.create({
     title,
-    topic: topic._id,
-    unit: topic.unit || null,
-    branch: topic.branch,
-    semester: topic.semester,
-    subject: topic.subject,
-    pdfs,
-    youtubeLinks: parsedYoutubeLinks,
-    summary: summary || "",
-    tags: tags ? (typeof tags === "string" ? JSON.parse(tags) : tags) : [],
+    description: description || "",
+    tags: tags ? (typeof tags === 'string' ? JSON.parse(tags) : tags) : [],
     difficulty: difficulty || "medium",
+    youtubeLinks: parsedYoutubeLinks,
+    files,
+    subject: subjectId,
+    semester: subject.semester._id,
+    branch: subject.branch._id,
+    college: collegeId,
     addedBy: req.user._id,
+    status: "approved" // Auto-approve for admin
   });
 
-  return successResponse(res, resource, "Resource added successfully");
+  // Populate the created resource
+  const populatedResource = await Resource.findById(resource._id)
+    .populate('subject', 'name code')
+    .populate('semester', 'name')
+    .populate('branch', 'name')
+    .populate('college', 'name')
+    .populate('addedBy', 'firstName lastName');
+
+  return successResponse(res, populatedResource, "Resource added successfully");
 });
 
+// Get resources by subject
+exports.getResourcesBySubject = asyncHandler(async (req, res) => {
+  const { subjectId } = req.params;
+
+  const resources = await Resource.find({ subject: subjectId, status: "approved" })
+    .populate('subject', 'name code')
+    .populate('semester', 'name')
+    .populate('branch', 'name')
+    .populate('college', 'name')
+    .populate('addedBy', 'firstName lastName')
+    .sort({ createdAt: -1 });
+
+  return successResponse(res, resources, "Resources fetched successfully");
+});
+
+// Get subjects by semester
+exports.getSubjectsBySemester = asyncHandler(async (req, res) => {
+  const { semesterId } = req.params;
+  
+  const subjects = await Subject.find({ semester: semesterId })
+    .populate('branch', 'name')
+    .sort({ name: 1 });
+
+  return successResponse(res, subjects, "Subjects fetched successfully");
+});
+
+// Get all resources (admin view)
+exports.getAllResources = asyncHandler(async (req, res) => {
+  const { status, subject, semester, branch, college } = req.query;
+  
+  let filter = {};
+  if (status) filter.status = status;
+  if (subject) filter.subject = subject;
+  if (semester) filter.semester = semester;
+  if (branch) filter.branch = branch;
+  if (college) filter.college = college;
+
+  const resources = await Resource.find(filter)
+    .populate('subject', 'name code')
+    .populate('semester', 'name')
+    .populate('branch', 'name')
+    .populate('college', 'name')
+    .populate('addedBy', 'firstName lastName email')
+    .sort({ createdAt: -1 });
+
+  return successResponse(res, resources, "Resources fetched successfully");
+});
+
+// Update resource status (approve/reject)
+exports.updateResourceStatus = asyncHandler(async (req, res) => {
+  const { resourceId } = req.params;
+  const { status } = req.body;
+
+  if (!["pending", "approved", "rejected"].includes(status)) {
+    return errorResponse(res, "Invalid status", 400);
+  }
+
+  const resource = await Resource.findByIdAndUpdate(
+    resourceId,
+    { status },
+    { new: true }
+  )
+    .populate('subject', 'name code')
+    .populate('addedBy', 'firstName lastName email');
+
+  if (!resource) {
+    return errorResponse(res, "Resource not found", 404);
+  }
+
+  return successResponse(res, resource, `Resource ${status} successfully`);
+});
+
+// Delete resource
+exports.deleteResource = asyncHandler(async (req, res) => {
+  const { resourceId } = req.params;
+
+  const resource = await Resource.findByIdAndDelete(resourceId);
+  if (!resource) {
+    return errorResponse(res, "Resource not found", 404);
+  }
+
+  return successResponse(res, null, "Resource deleted successfully");
+});
+
+// Update resource (existing function enhanced)
 exports.updateResource = asyncHandler(async (req, res) => {
   const resource = await Resource.findById(req.params.resourceId);
   if (!resource) return errorResponse(res, "Resource not found", 404);
 
-  const { title, summary, tags, difficulty, youtubeLinks } = req.body;
+  const { title, description, tags, difficulty, youtubeLinks, collegeId } = req.body;
 
   if (req.files && req.files.length > 0) {
-    const newPdfs = await Promise.all(
+    const newFiles = await Promise.all(
       req.files.map(async (file) => {
         const url = await uploadToCloudinary(file);
-        return { url, filename: file.originalname };
+        return {
+          filename: `file_${Date.now()}`,
+          originalName: file.originalname,
+          url: url,
+          size: file.size,
+          fileType: file.mimetype
+        };
       })
     );
-    resource.pdfs.push(...newPdfs);
+    resource.files.push(...newFiles);
   }
 
   if (title) resource.title = title;
-  if (summary) resource.summary = summary;
+  if (description) resource.description = description;
   if (tags) resource.tags = typeof tags === "string" ? JSON.parse(tags) : tags;
   if (difficulty) resource.difficulty = difficulty;
   if (youtubeLinks) {
     resource.youtubeLinks = typeof youtubeLinks === "string" ? JSON.parse(youtubeLinks) : youtubeLinks;
   }
+  if (collegeId) {
+    const college = await College.findById(collegeId);
+    if (!college) return errorResponse(res, "College not found", 404);
+    resource.college = collegeId;
+  }
 
   await resource.save();
-  return successResponse(res, resource, "Resource updated successfully");
-});
+  
+  // Populate before sending response
+  const populatedResource = await Resource.findById(resource._id)
+    .populate('subject', 'name code')
+    .populate('semester', 'name')
+    .populate('branch', 'name')
+    .populate('college', 'name')
+    .populate('addedBy', 'firstName lastName');
 
-exports.deleteResource = asyncHandler(async (req, res) => {
-  const resource = await Resource.findByIdAndDelete(req.params.resourceId);
-  if (!resource) return errorResponse(res, "Resource not found", 404);
-  return successResponse(res, null, "Resource deleted successfully");
-});
-
-exports.getAllResources = asyncHandler(async (req, res) => {
-  const resources = await Resource.find().sort({ createdAt: -1 });
-  return successResponse(res, resources, "Resources fetched successfully");
+  return successResponse(res, populatedResource, "Resource updated successfully");
 });
 
 // ------------------------
-// Dashboard Statistics - ADD THIS COMPLETE FUNCTION
+// Dashboard Statistics
 // ------------------------
 exports.getDashboardStats = asyncHandler(async (req, res) => {
   try {
@@ -390,6 +532,9 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
       .limit(5)
       .select('firstName lastName email role createdAt');
 
+    // Get pending resources for approval
+    const pendingResources = await Resource.countDocuments({ status: 'pending' });
+
     const stats = {
       totalUsers,
       totalColleges,
@@ -398,6 +543,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
       totalSubjects,
       totalYears: await Year.countDocuments(),
       totalSemesters: await Semester.countDocuments(),
+      pendingResources,
       recentUsers,
       recentActivity: recentUsers.map(user => ({
         action: 'User Registered',

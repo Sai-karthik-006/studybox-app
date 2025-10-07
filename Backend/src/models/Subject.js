@@ -7,6 +7,11 @@ const subjectSchema = new mongoose.Schema(
       required: [true, 'Subject name is required'],
       trim: true,
     },
+    code: {
+      type: String,
+      required: [true, 'Subject code is required'],
+      trim: true,
+    },
     branch: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Branch',
@@ -16,6 +21,11 @@ const subjectSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Semester',
       required: true,
+    },
+    credits: {
+      type: Number,
+      required: true,
+      default: 3
     },
     description: {
       type: String,
@@ -27,6 +37,7 @@ const subjectSchema = new mongoose.Schema(
   }
 );
 
-const Subject = mongoose.model('Subject', subjectSchema);
+// Prevent duplicate subjects in same semester
+subjectSchema.index({ name: 1, semester: 1 }, { unique: true });
 
-module.exports = Subject;
+module.exports = mongoose.model('Subject', subjectSchema);

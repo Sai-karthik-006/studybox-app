@@ -17,6 +17,11 @@ router.use(protect);
 router.use(adminOnly);
 
 // ------------------------
+// Dashboard Statistics
+// ------------------------
+router.get("/dashboard/stats", adminController.getDashboardStats);
+
+// ------------------------
 // User Management
 // ------------------------
 router.get("/users", adminController.getUsers);
@@ -48,6 +53,7 @@ router.delete("/year/:yearId", adminController.deleteYear);
 // ------------------------
 // Semester Management
 // ------------------------
+router.get("/semester/:semesterId/subjects", adminController.getSubjectsBySemester);
 router.post("/year/:yearId/semester", adminController.addSemester);
 router.put("/semester/:semesterId", adminController.updateSemester);
 router.delete("/semester/:semesterId", adminController.deleteSemester);
@@ -60,38 +66,54 @@ router.put("/subject/:subjectId", adminController.updateSubject);
 router.delete("/subject/:subjectId", adminController.deleteSubject);
 
 // ------------------------
-// ADD THESE MISSING UNIT ROUTES:
+// Unit Management
 // ------------------------
 router.post("/subject/:subjectId/unit", adminController.addUnit);
 router.put("/unit/:unitId", adminController.updateUnit);
 router.delete("/unit/:unitId", adminController.deleteUnit);
 
 // ------------------------
-// ADD THESE MISSING TOPIC ROUTES:
+// Topic Management
 // ------------------------
-router.post("/topic", adminController.addTopic); // You might need to adjust this based on your addTopic function parameters
+router.post("/topic/:subjectOrUnitId", adminController.addTopic); // Use query param ?unit=true for unit topics
 router.put("/topic/:topicId", adminController.updateTopic);
 router.delete("/topic/:topicId", adminController.deleteTopic);
 
 // ------------------------
-// Resource Management
+// Enhanced Resource Management
 // ------------------------
-router.post(
-  "/topic/:topicId/resource",
-  upload.array("pdfs", 5),
-  adminController.addResource
-);
-router.put(
-  "/resource/:resourceId",
-  upload.array("pdfs", 5),
-  adminController.updateResource
-);
-router.delete("/resource/:resourceId", adminController.deleteResource);
+
+// Get all resources with filtering (admin view)
 router.get("/resources", adminController.getAllResources);
 
-// ------------------------
-// Dashboard Statistics
-// ------------------------
-router.get("/dashboard/stats", adminController.getDashboardStats);
+// Get resources by subject
+router.get("/subject/:subjectId/resources", adminController.getResourcesBySubject);
+
+// Add resource to subject (enhanced with college support)
+router.post(
+  "/subject/:subjectId/resource",
+  upload.array("files", 5),
+  adminController.addResource
+);
+
+// Add resource to topic (legacy - keep for backward compatibility)
+router.post(
+  "/topic/:topicId/resource",
+  upload.array("files", 5),
+  adminController.addResource
+);
+
+// Update resource
+router.put(
+  "/resource/:resourceId",
+  upload.array("files", 5),
+  adminController.updateResource
+);
+
+// Update resource status (approve/reject)
+router.put("/resource/:resourceId/status", adminController.updateResourceStatus);
+
+// Delete resource
+router.delete("/resource/:resourceId", adminController.deleteResource);
 
 module.exports = router;
