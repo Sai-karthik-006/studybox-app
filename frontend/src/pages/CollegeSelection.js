@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Common/Header';
 import CollegeGrid from '../components/College/CollegeGrid';
 import { getColleges } from '../utils/api';
-import { FaSearch, FaUniversity } from 'react-icons/fa';
+import { FaSearch, FaUniversity, FaPlus } from 'react-icons/fa';
 
 const CollegeSelection = () => {
   const [colleges, setColleges] = useState([]);
@@ -19,49 +19,27 @@ const CollegeSelection = () => {
   useEffect(() => {
     const filtered = colleges.filter(college =>
       college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      college.description.toLowerCase().includes(searchTerm.toLowerCase())
+      college.fullName.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredColleges(filtered);
   }, [searchTerm, colleges]);
 
   const fetchColleges = async () => {
     try {
+      setLoading(true);
+      // Use actual API call - remove mock data
       const response = await getColleges();
       if (response.data && response.data.success) {
         setColleges(response.data.data);
         setFilteredColleges(response.data.data);
       } else {
-        // Fallback to mock data if API fails
-        const mockColleges = [
-          {
-            _id: '1',
-            name: 'ANITS',
-            description: 'Anil Neerukonda Institute of Technology & Sciences',
-            code: 'ANITS'
-          },
-          {
-            _id: '2', 
-            name: 'Andhra University',
-            description: 'Andhra University College of Engineering',
-            code: 'AU'
-          }
-        ];
-        setColleges(mockColleges);
-        setFilteredColleges(mockColleges);
+        console.error('Failed to fetch colleges');
       }
     } catch (error) {
       console.error('Error fetching colleges:', error);
-      // Fallback to mock data
-      const mockColleges = [
-        {
-          _id: '1',
-          name: 'ANITS',
-          description: 'Anil Neerukonda Institute of Technology & Sciences',
-          code: 'ANITS'
-        }
-      ];
-      setColleges(mockColleges);
-      setFilteredColleges(mockColleges);
+      // Fallback to empty array instead of mock data
+      setColleges([]);
+      setFilteredColleges([]);
     } finally {
       setLoading(false);
     }
@@ -98,7 +76,7 @@ const CollegeSelection = () => {
             <FaSearch className="search-icon" />
             <input
               type="text"
-              placeholder="Search colleges..."
+              placeholder="Search colleges by name or code..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -111,11 +89,11 @@ const CollegeSelection = () => {
           onCollegeSelect={handleCollegeSelect}
         />
 
-        {filteredColleges.length === 0 && (
+        {filteredColleges.length === 0 && !loading && (
           <div className="empty-state">
             <FaUniversity className="empty-icon" />
-            <h3>No colleges found</h3>
-            <p>Try adjusting your search terms</p>
+            <h3>No colleges available</h3>
+            <p>Colleges will be added by administrators soon</p>
           </div>
         )}
       </div>

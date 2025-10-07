@@ -2,26 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Common/Header';
 import BranchGrid from '../components/Branch/BranchGrid';
-import { FaCode, FaMicrochip, FaBolt, FaCogs, FaHardHat, FaSearch, FaLaptop } from 'react-icons/fa';
+import { getBranches } from '../utils/api';
+import { FaSearch, FaCode, FaMicrochip, FaBolt, FaCogs, FaHardHat, FaLaptop, FaRobot } from 'react-icons/fa';
 import { SiAltiumdesigner } from 'react-icons/si';
 
 const BranchSelection = () => {
   const [branches, setBranches] = useState([]);
   const [filteredBranches, setFilteredBranches] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const { college } = location.state || {};
 
   useEffect(() => {
-    fetchBranches();
-  }, []);
+    if (college) {
+      fetchBranches();
+    }
+  }, [college]);
 
   useEffect(() => {
     const filtered = branches.filter(branch =>
       branch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      branch.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+      branch.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      branch.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredBranches(filtered);
   }, [searchTerm, branches]);
@@ -29,77 +33,20 @@ const BranchSelection = () => {
   const fetchBranches = async () => {
     setLoading(true);
     try {
-      // Mock data - replace with actual API call
-      const mockBranches = [
-        {
-          _id: '1',
-          name: 'CSE',
-          fullName: 'Computer Science & Engineering',
-          description: 'Software development, algorithms, and computer systems',
-          icon: 'FaCode',
-          color: '#4F46E5'
-        },
-        {
-          _id: '2',
-          name: 'CSM',
-          fullName: 'Computer Science & Engineering (AI & ML)',
-          description: 'Artificial Intelligence and Machine Learning',
-          icon: 'FaLaptop',
-          color: '#10B981'
-        },
-        {
-          _id: '3',
-          name: 'CSD',
-          fullName: 'Computer Science & Design',
-          description: 'UI/UX design with software engineering',
-          icon: 'SiAltiumdesigner',
-          color: '#F59E0B'
-        },
-        {
-          _id: '4',
-          name: 'IT',
-          fullName: 'Information Technology',
-          description: 'Network systems and information management',
-          icon: 'FaMicrochip',
-          color: '#EF4444'
-        },
-        {
-          _id: '5',
-          name: 'ECE',
-          fullName: 'Electronics & Communication Engineering',
-          description: 'Electronics, communication systems, and signal processing',
-          icon: 'FaBolt',
-          color: '#8B5CF6'
-        },
-        {
-          _id: '6',
-          name: 'EEE',
-          fullName: 'Electrical & Electronics Engineering',
-          description: 'Electrical systems, power electronics, and control systems',
-          icon: 'FaCogs',
-          color: '#06B6D4'
-        },
-        {
-          _id: '7',
-          name: 'MECH',
-          fullName: 'Mechanical Engineering',
-          description: 'Machine design, thermodynamics, and manufacturing',
-          icon: 'FaHardHat',
-          color: '#DC2626'
-        },
-        {
-          _id: '8',
-          name: 'CIVIL',
-          fullName: 'Civil Engineering',
-          description: 'Construction, structural design, and infrastructure',
-          icon: 'FaHardHat',
-          color: '#059669'
-        }
-      ];
-      setBranches(mockBranches);
-      setFilteredBranches(mockBranches);
+      // Use actual API call - remove mock data
+      const response = await getBranches(college._id);
+      if (response.data && response.data.success) {
+        setBranches(response.data.data);
+        setFilteredBranches(response.data.data);
+      } else {
+        console.error('Failed to fetch branches');
+        setBranches([]);
+        setFilteredBranches([]);
+      }
     } catch (error) {
       console.error('Error fetching branches:', error);
+      setBranches([]);
+      setFilteredBranches([]);
     } finally {
       setLoading(false);
     }
@@ -113,6 +60,7 @@ const BranchSelection = () => {
     const iconMap = {
       FaCode: FaCode,
       FaLaptop: FaLaptop,
+      FaRobot: FaRobot,
       SiAltiumdesigner: SiAltiumdesigner,
       FaMicrochip: FaMicrochip,
       FaBolt: FaBolt,
@@ -151,7 +99,7 @@ const BranchSelection = () => {
             <FaSearch className="search-icon" />
             <input
               type="text"
-              placeholder="Search branches..."
+              placeholder="Search branches by name or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -165,11 +113,11 @@ const BranchSelection = () => {
           getBranchIcon={getBranchIcon}
         />
 
-        {filteredBranches.length === 0 && (
+        {filteredBranches.length === 0 && !loading && (
           <div className="empty-state">
             <FaCode className="empty-icon" />
             <h3>No branches found</h3>
-            <p>Try adjusting your search terms</p>
+            <p>Branches will be added by administrators for {college?.name}</p>
           </div>
         )}
       </div>

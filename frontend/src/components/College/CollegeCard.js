@@ -1,16 +1,37 @@
 import React from 'react';
-import { FaUniversity, FaArrowRight, FaUsers, FaBook } from 'react-icons/fa';
+import { FaUniversity, FaArrowRight } from 'react-icons/fa';
 
 const CollegeCard = ({ college, onSelect }) => {
+  // Handle logo display - use actual logo URL from database
+  const getLogoUrl = (logo) => {
+    if (!logo) return null;
+    
+    // If logo is a full URL (from Cloudinary/S3)
+    if (logo.startsWith('http')) return logo;
+    
+    // If logo is a relative path
+    return logo;
+  };
+
+  const logoUrl = getLogoUrl(college.logo);
+
   return (
     <div className="college-card" onClick={() => onSelect(college)}>
       <div className="college-header">
         <div className="college-logo">
-          {college.logo ? (
-            <img src={college.logo} alt={college.name} />
-          ) : (
-            <FaUniversity className="default-logo" />
-          )}
+          {logoUrl ? (
+            <img 
+              src={logoUrl} 
+              alt={college.name}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div className={`default-logo ${logoUrl ? 'fallback' : ''}`}>
+            <FaUniversity />
+          </div>
         </div>
         
         <div className="college-badge">
@@ -22,15 +43,17 @@ const CollegeCard = ({ college, onSelect }) => {
         <h3>{college.name}</h3>
         <p className="college-fullname">{college.fullName || college.description}</p>
         
-        <div className="college-stats">
-          <div className="stat">
-            <FaUsers className="stat-icon" />
-            <span>1.2K+ Students</span>
-          </div>
-          <div className="stat">
-            <FaBook className="stat-icon" />
-            <span>200+ Resources</span>
-          </div>
+        <div className="college-details">
+          {college.established && (
+            <div className="detail">
+              <strong>Est:</strong> {college.established}
+            </div>
+          )}
+          {college.location && (
+            <div className="detail">
+              <strong>Location:</strong> {college.location}
+            </div>
+          )}
         </div>
       </div>
       

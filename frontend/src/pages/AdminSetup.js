@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserShield, FaArrowLeft } from 'react-icons/fa';
+import { FaUserShield, FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 
 const AdminSetup = () => {
   const [formData, setFormData] = useState({
-    firstName: 'Karthik',
-    lastName: 'Admin',
-    email: 'attisivasaikarthik@gmail.com',
-    password: 'Jaishu@1117',
-    confirmPassword: 'Jaishu@1117',
-    gender: 'male',
-    adminCode: 'studybox123'
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    gender: '',
+    adminCode: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
@@ -22,8 +23,21 @@ const AdminSetup = () => {
     setLoading(true);
     setMessage('');
 
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       setMessage('Passwords do not match!');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setMessage('Password must be at least 6 characters long!');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.adminCode) {
+      setMessage('Admin code is required!');
       setLoading(false);
       return;
     }
@@ -44,11 +58,21 @@ const AdminSetup = () => {
       
       if (data.success) {
         setMessage('Admin account created successfully! You can now login.');
+        // Clear form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          gender: '',
+          adminCode: ''
+        });
         setTimeout(() => {
           navigate('/admin-login');
-        }, 2000);
+        }, 3000);
       } else {
-        setMessage(data.message || 'Failed to create admin account');
+        setMessage(data.message || 'Failed to create admin account. Please check the admin code.');
       }
     } catch (error) {
       setMessage('Error creating admin account: ' + error.message);
@@ -77,7 +101,7 @@ const AdminSetup = () => {
             <FaUserShield />
           </div>
           <h2>Admin Setup</h2>
-          <p>Create admin account for first-time setup</p>
+          <p>Create administrator account for first-time setup</p>
         </div>
 
         {message && (
@@ -89,64 +113,79 @@ const AdminSetup = () => {
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-row">
             <div className="form-group">
-              <label>First Name</label>
+              <label>First Name *</label>
               <input
                 type="text"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
+                placeholder="Enter first name"
                 required
               />
             </div>
             <div className="form-group">
-              <label>Last Name</label>
+              <label>Last Name *</label>
               <input
                 type="text"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
+                placeholder="Enter last name"
                 required
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label>Email</label>
+            <label>Email Address *</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
+              placeholder="Enter admin email address"
               required
             />
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+              <label>Password *</label>
+              <div className="password-input">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter password (min 6 characters)"
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
             <div className="form-group">
-              <label>Confirm Password</label>
+              <label>Confirm Password *</label>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                placeholder="Confirm password"
                 required
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label>Gender</label>
+            <label>Gender *</label>
             <select name="gender" value={formData.gender} onChange={handleChange} required>
+              <option value="">Select Gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
               <option value="other">Other</option>
@@ -154,7 +193,7 @@ const AdminSetup = () => {
           </div>
 
           <div className="form-group">
-            <label>Admin Code</label>
+            <label>Admin Secret Code *</label>
             <input
               type="password"
               name="adminCode"
@@ -163,7 +202,7 @@ const AdminSetup = () => {
               placeholder="Enter admin secret code"
               required
             />
-            <small>Check your backend .env file for ADMIN_CODE</small>
+            <small>Get this code from your backend .env file (ADMIN_CODE)</small>
           </div>
 
           <button 
@@ -177,7 +216,7 @@ const AdminSetup = () => {
 
         <div className="auth-footer">
           <p><strong>Note:</strong> This is for first-time setup only.</p>
-          <p>After creating the admin account, use the regular admin login.</p>
+          <p>After creating the admin account, use the regular admin login page.</p>
         </div>
       </div>
     </div>
