@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/Common/Header';
 import BranchGrid from '../components/Branch/BranchGrid';
-import { getBranches } from '../utils/api';
+import { getStudentBranches } from '../utils/api'; // FIX IMPORT
 import { FaSearch, FaCode, FaMicrochip, FaBolt, FaCogs, FaHardHat, FaLaptop, FaRobot } from 'react-icons/fa';
 import { SiAltiumdesigner } from 'react-icons/si';
 

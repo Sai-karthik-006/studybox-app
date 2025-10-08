@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Common/Header';
 import CollegeGrid from '../components/College/CollegeGrid';
-import { getColleges } from '../utils/api';
+import { getStudentColleges } from '../utils/api'; // FIX IMPORT
 import { FaSearch, FaUniversity, FaPlus } from 'react-icons/fa';
 
 const CollegeSelection = () => {
