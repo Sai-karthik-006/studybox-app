@@ -24,26 +24,25 @@ const CollegeSelection = () => {
     setFilteredColleges(filtered);
   }, [searchTerm, colleges]);
 
-  const fetchColleges = async () => {
-    try {
-      setLoading(true);
-      // Use actual API call - remove mock data
-      const response = await getColleges();
-      if (response.data && response.data.success) {
-        setColleges(response.data.data);
-        setFilteredColleges(response.data.data);
-      } else {
-        console.error('Failed to fetch colleges');
-      }
-    } catch (error) {
-      console.error('Error fetching colleges:', error);
-      // Fallback to empty array instead of mock data
+ const fetchColleges = async () => {
+  try {
+    setLoading(true);
+    // Use actual student API call
+    const response = await getStudentColleges();
+    if (response.data && response.data.success) {
+      setColleges(response.data.data);
+      setFilteredColleges(response.data.data);
+    } else {
+      console.error('Failed to fetch colleges');
       setColleges([]);
-      setFilteredColleges([]);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching colleges:', error);
+    setColleges([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCollegeSelect = (college) => {
     navigate('/branches', { state: { college } });

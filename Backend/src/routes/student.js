@@ -28,6 +28,17 @@ router.get("/topics/:unitId", studentController.getTopics);
 // ------------------------
 router.get("/resources/:topicId", studentController.getResources);
 
+// Update these routes to include collegeId:
+
+// ------------------------
+// Hierarchy browsing
+// ------------------------
+router.get("/colleges", studentController.getColleges);
+router.get("/colleges/:collegeId/branches", studentController.getBranches);
+router.get("/colleges/:collegeId/branches/:branchId/years", studentController.getYears);
+router.get("/years/:yearId/semesters", studentController.getSemesters);
+router.get("/semesters/:semesterId/subjects", studentController.getSubjects);
+
 // ------------------------
 // Search resources
 // ------------------------

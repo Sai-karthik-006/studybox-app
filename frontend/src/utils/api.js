@@ -51,7 +51,7 @@ export const deleteUser = (userId) =>
 
 // College Management APIs
 export const getColleges = () => 
-  api.get('/student/colleges'); // Both admin and student use same endpoint
+  api.get('/admin/colleges');
 
 export const addCollege = (collegeData) => 
   api.post('/admin/college', collegeData);
@@ -61,6 +61,12 @@ export const updateCollege = (collegeId, collegeData) =>
 
 export const deleteCollege = (collegeId) => 
   api.delete(`/admin/college/${collegeId}`);
+
+export const assignBranchToCollege = (collegeId, branchId) => 
+  api.post(`/admin/college/${collegeId}/branch/${branchId}`);
+
+export const removeBranchFromCollege = (collegeId, branchId) => 
+  api.delete(`/admin/college/${collegeId}/branch/${branchId}`);
 
 // Branch Management APIs
 export const addBranch = (branchData) => 
@@ -74,6 +80,7 @@ export const deleteBranch = (branchId) =>
 
 export const getBranches = () => 
   api.get('/admin/branches'); // New endpoint to get all branches
+
 // Subject APIs
 export const getSubjectsBySemester = (semesterId) => 
   api.get(`/admin/semester/${semesterId}/subjects`);
@@ -97,4 +104,14 @@ export const addResource = (resourceData) =>
 export const getDashboardStats = () => 
   api.get('/admin/dashboard/stats');
 
+// Student APIs (updated with collegeId)
+export const getStudentColleges = () => 
+  api.get('/student/colleges');
+
+export const getStudentBranches = (collegeId) => 
+  api.get(`/student/colleges/${collegeId}/branches`);
+
+export const getStudentYears = (collegeId, branchId) => 
+  api.get(`/student/colleges/${collegeId}/branches/${branchId}/years`);
+  
 export default api;

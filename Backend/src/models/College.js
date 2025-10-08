@@ -1,34 +1,37 @@
 const mongoose = require("mongoose");
 
+/**
+ * College Schema
+ * Represents educational institutions
+ */
 const collegeSchema = new mongoose.Schema(
   {
     name: { 
       type: String, 
       required: [true, "College name is required"], 
-      unique: true,
+      trim: true 
+    },
+    fullName: { 
+      type: String, 
+      required: [true, "College full name is required"], 
       trim: true 
     },
     code: { 
       type: String, 
       required: [true, "College code is required"], 
-      unique: true,
+      unique: true, 
       uppercase: true,
       trim: true 
     },
-    description: { 
-      type: String, 
-      trim: true 
-    },
-    established: { 
-      type: Number 
-    },
-    location: { 
-      type: String, 
-      trim: true 
-    },
-    logo: { 
-      type: String // URL to college logo
-    },
+    established: { type: String },
+    location: { type: String },
+    logo: { type: String }, // URL to college logo
+    description: { type: String, trim: true },
+    // Branches offered by this college
+    branches: [{ 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Branch" 
+    }],
     status: { 
       type: String, 
       enum: ["active", "inactive"], 
@@ -37,8 +40,5 @@ const collegeSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-// Index for better search performance
-collegeSchema.index({ name: 1, code: 1 });
 
 module.exports = mongoose.model("College", collegeSchema);

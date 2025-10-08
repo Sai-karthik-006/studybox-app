@@ -12,30 +12,53 @@ const asyncHandler = require("../utils/asyncHandler");
 const { successResponse, errorResponse } = require("../utils/apiResponse");
 
 // ------------------------
-// Get all colleges
+// Get colleges with active branches
 // GET /api/student/colleges
 // ------------------------
 exports.getColleges = asyncHandler(async (req, res) => {
-  const colleges = await College.find({ status: "active" }).sort({ name: 1 });
+  const colleges = await College.find({ status: "active" })
+    .populate('branches', 'name fullName description icon color')
+    .select('name fullName code established location logo description');
+  
   return successResponse(res, colleges, "Colleges fetched successfully");
 });
 
 // ------------------------
-// Browse branches
-// GET /api/student/branches
+// Get branches of a specific college
+// GET /api/student/branches/:collegeId
 // ------------------------
 exports.getBranches = asyncHandler(async (req, res) => {
-  const branches = await Branch.find();
-  return successResponse(res, branches, "Branches fetched successfully");
+  const { collegeId } = req.params;
+  
+  const college = await College.findById(collegeId).populate({
+    path: 'branches',
+    match: { status: 'active' },
+    select: 'name fullName description icon color'
+  });
+
+  if (!college) return errorResponse(res, "College not found", 404);
+
+  return successResponse(res, college.branches, "Branches fetched successfully");
 });
 
 // ------------------------
-// Get years of a branch
-// GET /api/student/years/:branchId
+// Get years of a branch in a college
+// GET /api/student/years/:collegeId/:branchId
 // ------------------------
 exports.getYears = asyncHandler(async (req, res) => {
-  const { branchId } = req.params;
-  const years = await Year.find({ branch: branchId });
+  const { collegeId, branchId } = req.params;
+  
+  // Verify college and branch are linked
+  const college = await College.findById(collegeId);
+  if (!college || !college.branches.includes(branchId)) {
+    return errorResponse(res, "Branch not found in this college", 404);
+  }
+
+  const years = await Year.find({ 
+    branch: branchId,
+    status: "active"
+  }).select('name description');
+
   return successResponse(res, years, "Years fetched successfully");
 });
 

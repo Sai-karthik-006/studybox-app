@@ -31,26 +31,24 @@ const BranchSelection = () => {
   }, [searchTerm, branches]);
 
   const fetchBranches = async () => {
-    setLoading(true);
-    try {
-      // Use actual API call - remove mock data
-      const response = await getBranches(college._id);
-      if (response.data && response.data.success) {
-        setBranches(response.data.data);
-        setFilteredBranches(response.data.data);
-      } else {
-        console.error('Failed to fetch branches');
-        setBranches([]);
-        setFilteredBranches([]);
-      }
-    } catch (error) {
-      console.error('Error fetching branches:', error);
+  setLoading(true);
+  try {
+    // Use actual student API call with collegeId
+    const response = await getStudentBranches(college._id);
+    if (response.data && response.data.success) {
+      setBranches(response.data.data);
+      setFilteredBranches(response.data.data);
+    } else {
+      console.error('Failed to fetch branches');
       setBranches([]);
-      setFilteredBranches([]);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching branches:', error);
+    setBranches([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleBranchSelect = (branch) => {
     navigate('/years', { state: { college, branch } });

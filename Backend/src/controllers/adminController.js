@@ -100,8 +100,13 @@ exports.deleteCollege = asyncHandler(async (req, res) => {
 });
 
 // ------------------------
-// Branch CRUD
+// Branch Management
 // ------------------------
+exports.getAllBranches = asyncHandler(async (req, res) => {
+  const branches = await Branch.find().populate('colleges', 'name code');
+  return successResponse(res, branches, "Branches fetched successfully");
+});
+
 exports.addBranch = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
   try {
@@ -125,6 +130,53 @@ exports.deleteBranch = asyncHandler(async (req, res) => {
   const branch = await Branch.findByIdAndDelete(req.params.branchId);
   if (!branch) return errorResponse(res, "Branch not found", 404);
   return successResponse(res, null, "Branch deleted successfully");
+});
+
+// ------------------------
+// Branch-College Association
+// ------------------------
+exports.assignBranchToCollege = asyncHandler(async (req, res) => {
+  const { collegeId, branchId } = req.params;
+
+  const college = await College.findById(collegeId);
+  const branch = await Branch.findById(branchId);
+
+  if (!college) return errorResponse(res, "College not found", 404);
+  if (!branch) return errorResponse(res, "Branch not found", 404);
+
+  // Add branch to college if not already added
+  if (!college.branches.includes(branchId)) {
+    college.branches.push(branchId);
+    await college.save();
+  }
+
+  // Add college to branch if not already added
+  if (!branch.colleges.includes(collegeId)) {
+    branch.colleges.push(collegeId);
+    await branch.save();
+  }
+
+  return successResponse(res, { college, branch }, "Branch assigned to college successfully");
+});
+
+exports.removeBranchFromCollege = asyncHandler(async (req, res) => {
+  const { collegeId, branchId } = req.params;
+
+  const college = await College.findById(collegeId);
+  const branch = await Branch.findById(branchId);
+
+  if (!college) return errorResponse(res, "College not found", 404);
+  if (!branch) return errorResponse(res, "Branch not found", 404);
+
+  // Remove branch from college
+  college.branches = college.branches.filter(bid => bid.toString() !== branchId);
+  await college.save();
+
+  // Remove college from branch
+  branch.colleges = branch.colleges.filter(cid => cid.toString() !== collegeId);
+  await branch.save();
+
+  return successResponse(res, null, "Branch removed from college successfully");
 });
 
 // ------------------------

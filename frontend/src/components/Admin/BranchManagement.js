@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaCode, FaSearch, FaSave, FaTimes } from 'react-icons/fa';
-import { addBranch, updateBranch, deleteBranch, getBranches } from '../../utils/api';
+import { FaPlus, FaEdit, FaTrash, FaCode, FaSearch, FaSave, FaTimes, FaUniversity, FaLink, FaUnlink } from 'react-icons/fa';
+import { addBranch, updateBranch, deleteBranch, getBranches, getColleges, assignBranchToCollege, removeBranchFromCollege } from '../../utils/api';
 import { toast } from 'react-toastify';
 
 const BranchManagement = () => {
   const [branches, setBranches] = useState([]);
+  const [colleges, setColleges] = useState([]);
   const [filteredBranches, setFilteredBranches] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState(null);
   const [editingBranch, setEditingBranch] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -44,6 +47,7 @@ const BranchManagement = () => {
 
   useEffect(() => {
     fetchBranches();
+    fetchColleges();
   }, []);
 
   useEffect(() => {
@@ -57,8 +61,6 @@ const BranchManagement = () => {
   const fetchBranches = async () => {
     try {
       setLoading(true);
-      // Since getBranches requires collegeId, we'll fetch all branches differently
-      // For now, we'll manage branches globally
       const response = await getBranches();
       if (response.data && response.data.success) {
         setBranches(response.data.data);
@@ -73,6 +75,18 @@ const BranchManagement = () => {
       setBranches([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchColleges = async () => {
+    try {
+      const response = await getColleges();
+      if (response.data && response.data.success) {
+        setColleges(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching colleges:', error);
+      toast.error('Failed to load colleges');
     }
   };
 
@@ -144,6 +158,37 @@ const BranchManagement = () => {
     }
   };
 
+  const handleAssignToCollege = async (collegeId) => {
+    try {
+      const response = await assignBranchToCollege(collegeId, selectedBranch._id);
+      if (response.data && response.data.success) {
+        toast.success(`Branch assigned to college successfully`);
+        fetchBranches(); // Refresh data
+        setShowAssignModal(false);
+        setSelectedBranch(null);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to assign branch to college');
+    }
+  };
+
+  const handleRemoveFromCollege = async (collegeId) => {
+    try {
+      const response = await removeBranchFromCollege(collegeId, selectedBranch._id);
+      if (response.data && response.data.success) {
+        toast.success(`Branch removed from college successfully`);
+        fetchBranches(); // Refresh data
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to remove branch from college');
+    }
+  };
+
+  const openAssignModal = (branch) => {
+    setSelectedBranch(branch);
+    setShowAssignModal(true);
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -161,6 +206,16 @@ const BranchManagement = () => {
     });
     setEditingBranch(null);
     setShowAddModal(false);
+  };
+
+  const closeAssignModal = () => {
+    setShowAssignModal(false);
+    setSelectedBranch(null);
+  };
+
+  // Check if branch is assigned to a college
+  const isBranchAssignedToCollege = (branch, collegeId) => {
+    return branch.colleges && branch.colleges.some(college => college._id === collegeId);
   };
 
   if (loading) {
@@ -209,6 +264,7 @@ const BranchManagement = () => {
           <div className="col">Branch</div>
           <div className="col">Full Name</div>
           <div className="col">Description</div>
+          <div className="col">Colleges</div>
           <div className="col">Appearance</div>
           <div className="col">Actions</div>
         </div>
@@ -238,6 +294,34 @@ const BranchManagement = () => {
               </div>
               
               <div className="col">
+                <div className="colleges-list">
+                  {branch.colleges && branch.colleges.length > 0 ? (
+                    <div className="assigned-colleges">
+                      {branch.colleges.slice(0, 3).map(college => (
+                        <span key={college._id} className="college-tag">
+                          {college.name}
+                          <button 
+                            className="unlink-btn"
+                            onClick={() => handleRemoveFromCollege(college._id)}
+                            title="Remove from college"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                      {branch.colleges.length > 3 && (
+                        <span className="more-colleges">
+                          +{branch.colleges.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="no-colleges">Not assigned</span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="col">
                 <div className="appearance-preview">
                   <span 
                     className="color-badge"
@@ -251,14 +335,23 @@ const BranchManagement = () => {
               
               <div className="col actions">
                 <button 
+                  className="action-btn assign"
+                  onClick={() => openAssignModal(branch)}
+                  title="Assign to colleges"
+                >
+                  <FaLink />
+                </button>
+                <button 
                   className="action-btn edit"
                   onClick={() => handleEdit(branch)}
+                  title="Edit branch"
                 >
                   <FaEdit />
                 </button>
                 <button 
                   className="action-btn delete"
                   onClick={() => handleDelete(branch._id)}
+                  title="Delete branch"
                 >
                   <FaTrash />
                 </button>
@@ -384,6 +477,93 @@ const BranchManagement = () => {
               >
                 <FaSave />
                 {editingBranch ? 'Update Branch' : 'Add Branch'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Branch to College Modal */}
+      {showAssignModal && selectedBranch && (
+        <div className="modal-overlay">
+          <div className="modal medium-modal">
+            <div className="modal-header">
+              <h3>Assign Branch to Colleges</h3>
+              <button onClick={closeAssignModal}>×</button>
+            </div>
+            
+            <div className="modal-content">
+              <div className="selected-branch-info">
+                <div 
+                  className="branch-icon-preview"
+                  style={{ backgroundColor: selectedBranch.color || '#4F46E5' }}
+                >
+                  <FaCode />
+                </div>
+                <div>
+                  <strong>{selectedBranch.name}</strong>
+                  <span>{selectedBranch.fullName}</span>
+                </div>
+              </div>
+
+              <div className="colleges-assignment">
+                <h4>Available Colleges</h4>
+                <div className="colleges-list">
+                  {colleges.map(college => (
+                    <div key={college._id} className="college-item">
+                      <div className="college-info">
+                        <FaUniversity className="college-icon" />
+                        <div>
+                          <strong>{college.name}</strong>
+                          <span>{college.code} • {college.location}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="college-actions">
+                        {isBranchAssignedToCollege(selectedBranch, college._id) ? (
+                          <button 
+                            className="btn danger small"
+                            onClick={() => handleRemoveFromCollege(college._id)}
+                          >
+                            <FaUnlink />
+                            Remove
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn primary small"
+                            onClick={() => handleAssignToCollege(college._id)}
+                          >
+                            <FaLink />
+                            Assign
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {selectedBranch.colleges && selectedBranch.colleges.length > 0 && (
+                <div className="current-assignments">
+                  <h4>Currently Assigned To</h4>
+                  <div className="assigned-colleges-list">
+                    {selectedBranch.colleges.map(college => (
+                      <span key={college._id} className="college-tag">
+                        {college.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-actions">
+              <button 
+                className="btn secondary"
+                onClick={closeAssignModal}
+              >
+                <FaTimes />
+                Close
               </button>
             </div>
           </div>

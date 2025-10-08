@@ -39,9 +39,16 @@ router.delete("/college/:collegeId", adminController.deleteCollege);
 // ------------------------
 // Branch Management
 // ------------------------
+router.get("/branches", adminController.getAllBranches);
 router.post("/branch", adminController.addBranch);
 router.put("/branch/:branchId", adminController.updateBranch);
 router.delete("/branch/:branchId", adminController.deleteBranch);
+
+// ------------------------
+// Assign/remove branches to colleges
+// ------------------------
+router.post("/college/:collegeId/branch/:branchId", adminController.assignBranchToCollege);
+router.delete("/college/:collegeId/branch/:branchId", adminController.removeBranchFromCollege);
 
 // ------------------------
 // Year Management
