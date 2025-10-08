@@ -70,6 +70,7 @@ export const addBranchToCollege = (collegeId, branchId) =>
 
 export const removeBranchFromCollege = (collegeId, branchId) => 
   api.delete(`/admin/colleges/${collegeId}/branches/${branchId}`);
+
 // Branch Management APIs
 export const addBranch = (branchData) => 
   api.post('/admin/branch', branchData);
@@ -115,16 +116,9 @@ export const getStudentBranches = (collegeId) =>
 
 export const getStudentYears = (collegeId, branchId) => 
   api.get(`/student/colleges/${collegeId}/branches/${branchId}/years`);
-  
-// College-Branch Assignment APIs
+
+// College-Branch Assignment APIs (using consistent naming)
 export const assignBranchToCollege = (collegeId, branchId) => 
-  api.post(`/admin/college/${collegeId}/branch/${branchId}`);
-
-export const removeBranchFromCollege = (collegeId, branchId) => 
-  api.delete(`/admin/college/${collegeId}/branch/${branchId}`);
-
-// Get all colleges (for admin)
-export const getColleges = () => 
-  api.get('/admin/colleges');
+  api.post(`/admin/colleges/${collegeId}/branches/${branchId}`);
 
 export default api;
