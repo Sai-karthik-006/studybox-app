@@ -53,21 +53,23 @@ export const deleteUser = (userId) =>
 export const getColleges = () => 
   api.get('/admin/colleges');
 
-export const addCollege = (collegeData) => 
-  api.post('/admin/college', collegeData);
+export const getCollegeById = (id) => 
+  api.get(`/admin/colleges/${id}`);
 
-export const updateCollege = (collegeId, collegeData) => 
-  api.put(`/admin/college/${collegeId}`, collegeData);
+export const createCollege = (collegeData) => 
+  api.post('/admin/colleges', collegeData);
 
-export const deleteCollege = (collegeId) => 
-  api.delete(`/admin/college/${collegeId}`);
+export const updateCollege = (id, collegeData) => 
+  api.put(`/admin/colleges/${id}`, collegeData);
 
-export const assignBranchToCollege = (collegeId, branchId) => 
-  api.post(`/admin/college/${collegeId}/branch/${branchId}`);
+export const deleteCollege = (id) => 
+  api.delete(`/admin/colleges/${id}`);
+
+export const addBranchToCollege = (collegeId, branchId) => 
+  api.post(`/admin/colleges/${collegeId}/branches/${branchId}`);
 
 export const removeBranchFromCollege = (collegeId, branchId) => 
-  api.delete(`/admin/college/${collegeId}/branch/${branchId}`);
-
+  api.delete(`/admin/colleges/${collegeId}/branches/${branchId}`);
 // Branch Management APIs
 export const addBranch = (branchData) => 
   api.post('/admin/branch', branchData);

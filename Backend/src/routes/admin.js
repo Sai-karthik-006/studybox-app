@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
+const collegeController = require("../controllers/collegeController"); // ADD THIS
 const { protect, adminOnly } = require("../middlewares/auth");
 const multer = require("multer");
 
@@ -15,6 +16,19 @@ const upload = multer({ storage });
 // ------------------------
 router.use(protect);
 router.use(adminOnly);
+
+// ------------------------
+// College routes
+// ------------------------
+router.get("/colleges", collegeController.getColleges);
+router.get("/colleges/:id", collegeController.getCollegeById);
+router.post("/colleges", collegeController.createCollege);
+router.put("/colleges/:id", collegeController.updateCollege);
+router.delete("/colleges/:id", collegeController.deleteCollege);
+router.post("/colleges/:collegeId/branches/:branchId", collegeController.addBranchToCollege);
+router.delete("/colleges/:collegeId/branches/:branchId", collegeController.removeBranchFromCollege);
+
+// ... keep existing br
 
 // ------------------------
 // Dashboard Statistics
