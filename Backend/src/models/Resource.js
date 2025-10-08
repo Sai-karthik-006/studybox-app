@@ -7,23 +7,18 @@ const resourceSchema = new mongoose.Schema(
       required: [true, "Title is required"], 
       trim: true 
     },
-    
-    // Enhanced YouTube links structure
-    youtubeLinks: [
-      {
-        title: { type: String, required: true },
-        url: { type: String, required: true },
-        channel: { type: String },
-        duration: { type: String },
-        description: { type: String },
-        thumbnail: { type: String } // YouTube thumbnail URL
-      }
-    ],
-
-    // Academic hierarchy - all required
-    subject: { 
+    topic: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "Subject", 
+      ref: "Topic", 
+      required: true 
+    },
+    unit: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Unit" 
+    },
+    branch: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Branch", 
       required: true 
     },
     semester: { 
@@ -31,37 +26,37 @@ const resourceSchema = new mongoose.Schema(
       ref: "Semester", 
       required: true 
     },
-    branch: { 
+    subject: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "Branch", 
+      ref: "Subject", 
       required: true 
     },
-    college: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "College", 
-      required: true 
-    },
+    
+    // Multiple PDFs
+    pdfs: [
+      {
+        url: { type: String },
+        filename: { type: String },
+        size: { type: String }
+      }
+    ],
 
-    // Resource details
-    description: { type: String, trim: true },
+    // YouTube links as URLs (not embed codes)
+    youtubeLinks: [
+      {
+        title: { type: String, required: true },
+        url: { type: String, required: true },
+        description: { type: String }
+      }
+    ],
+
+    summary: { type: String, trim: true },
     tags: [{ type: String, trim: true }],
     difficulty: { 
       type: String, 
       enum: ["easy", "medium", "hard"], 
       default: "medium" 
     },
-    
-    // Files (PDFs, notes, etc.)
-    files: [
-      {
-        filename: { type: String },
-        originalName: { type: String },
-        url: { type: String },
-        size: { type: Number },
-        fileType: { type: String }
-      }
-    ],
-
     addedBy: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: "User", 
@@ -69,22 +64,12 @@ const resourceSchema = new mongoose.Schema(
     },
 
     // Stats
-    views: { type: Number, default: 0 },
-    likes: { type: Number, default: 0 },
     rating: { type: Number, default: 0 },
-
-    // Status for moderation
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "approved"
-    }
+    likes: { type: Number, default: 0 },
+    views: { type: Number, default: 0 },
+    downloadCount: { type: Number, default: 0 }
   },
   { timestamps: true }
 );
-
-// Index for better query performance
-resourceSchema.index({ subject: 1, semester: 1 });
-resourceSchema.index({ college: 1, branch: 1 });
 
 module.exports = mongoose.model("Resource", resourceSchema);

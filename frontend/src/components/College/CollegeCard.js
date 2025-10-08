@@ -2,36 +2,40 @@ import React from 'react';
 import { FaUniversity, FaArrowRight } from 'react-icons/fa';
 
 const CollegeCard = ({ college, onSelect }) => {
-  // Handle logo display - use actual logo URL from database
-  const getLogoUrl = (logo) => {
-    if (!logo) return null;
-    
-    // If logo is a full URL (from Cloudinary/S3)
-    if (logo.startsWith('http')) return logo;
-    
-    // If logo is a relative path
-    return logo;
+  // Handle logo display with proper error handling
+  const handleImageError = (e) => {
+    e.target.style.display = 'none';
+    const fallback = e.target.nextSibling;
+    if (fallback) fallback.style.display = 'flex';
   };
 
-  const logoUrl = getLogoUrl(college.logo);
+  const handleImageLoad = (e) => {
+    e.target.style.display = 'block';
+    const fallback = e.target.nextSibling;
+    if (fallback) fallback.style.display = 'none';
+  };
 
   return (
     <div className="college-card" onClick={() => onSelect(college)}>
       <div className="college-header">
         <div className="college-logo">
-          {logoUrl ? (
-            <img 
-              src={logoUrl} 
-              alt={college.name}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-          ) : null}
-          <div className={`default-logo ${logoUrl ? 'fallback' : ''}`}>
-            <FaUniversity />
-          </div>
+          {college.logo ? (
+            <>
+              <img 
+                src={college.logo} 
+                alt={college.name}
+                onError={handleImageError}
+                onLoad={handleImageLoad}
+              />
+              <div className="default-logo fallback">
+                <FaUniversity />
+              </div>
+            </>
+          ) : (
+            <div className="default-logo">
+              <FaUniversity />
+            </div>
+          )}
         </div>
         
         <div className="college-badge">
@@ -41,19 +45,28 @@ const CollegeCard = ({ college, onSelect }) => {
       
       <div className="college-info">
         <h3>{college.name}</h3>
-        <p className="college-fullname">{college.fullName || college.description}</p>
+        <p className="college-fullname">{college.fullName}</p>
         
         <div className="college-details">
-          {college.established && (
+          {college.established && college.established !== "Not specified" && (
             <div className="detail">
               <strong>Est:</strong> {college.established}
             </div>
           )}
-          {college.location && (
+          {college.location && college.location !== "Not specified" && (
             <div className="detail">
               <strong>Location:</strong> {college.location}
             </div>
           )}
+        </div>
+
+        <div className="college-stats">
+          <div className="stat">
+            <span className="stat-number">
+              {college.branches ? college.branches.length : 0}
+            </span>
+            <span className="stat-label">Branches</span>
+          </div>
         </div>
       </div>
       

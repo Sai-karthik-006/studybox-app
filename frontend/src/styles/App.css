@@ -3839,3 +3839,172 @@ body {
 .action-btn.assign:hover {
   background: #059669;
 }
+
+/* YouTube Links Styles */
+.youtube-links-form {
+  border: 1px solid #e1e5e9;
+  border-radius: 10px;
+  padding: 1.5rem;
+  background: #f8f9fa;
+}
+
+.youtube-link-input {
+  margin-bottom: 1.5rem;
+}
+
+.added-youtube-links {
+  border-top: 1px solid #e1e5e9;
+  padding-top: 1rem;
+}
+
+.added-youtube-links h5 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.youtube-link-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e1e5e9;
+}
+
+.link-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.youtube-icon {
+  color: #FF0000;
+  font-size: 1.2rem;
+  margin-top: 0.25rem;
+}
+
+.link-url {
+  display: block;
+  color: #666;
+  font-size: 0.8rem;
+  word-break: break-all;
+  margin-top: 0.25rem;
+}
+
+/* YouTube Links in Resource Card */
+.youtube-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.youtube-link-item {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e1e5e9;
+}
+
+.youtube-link-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.youtube-link-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.video-info {
+  flex: 1;
+}
+
+.video-info strong {
+  display: block;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.video-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+}
+
+.video-url {
+  color: #667eea;
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+.external-icon {
+  color: #667eea;
+}
+
+/* College Logo Fixes */
+.college-logo {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.college-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.default-logo.fallback {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 1.5rem;
+}
+
+/* Form Sections */
+.form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.form-section h4 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+/* Button Styles */
+.btn.danger {
+  background: #EF4444;
+  color: white;
+}
+
+.btn.danger:hover {
+  background: #DC2626;
+}
+
+.btn.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+}

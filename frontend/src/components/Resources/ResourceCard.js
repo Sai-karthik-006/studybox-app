@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { FaStar, FaHeart, FaEye, FaFilePdf, FaYoutube, FaDownload } from 'react-icons/fa';
+import { FaStar, FaHeart, FaEye, FaFilePdf, FaYoutube, FaDownload, FaExternalLinkAlt } from 'react-icons/fa';
 
 const ResourceCard = ({ resource }) => {
   const [liked, setLiked] = useState(false);
-  const [localLikes, setLocalLikes] = useState(resource.likes);
+  const [localLikes, setLocalLikes] = useState(resource.likes || 0);
 
   const handleLike = () => {
     setLiked(!liked);
@@ -11,11 +11,14 @@ const ResourceCard = ({ resource }) => {
   };
 
   const handleDownload = (pdf) => {
-    // Simulate download
     const link = document.createElement('a');
     link.href = pdf.url;
-    link.download = pdf.filename;
+    link.download = pdf.filename || 'download.pdf';
     link.click();
+  };
+
+  const handleYouTubeClick = (url) => {
+    window.open(url, '_blank');
   };
 
   const getDifficultyColor = (difficulty) => {
@@ -39,16 +42,21 @@ const ResourceCard = ({ resource }) => {
         </div>
       </div>
 
-      <p className="resource-summary">{resource.summary}</p>
+      {resource.summary && (
+        <p className="resource-summary">{resource.summary}</p>
+      )}
 
-      <div className="resource-tags">
-        {resource.tags.map((tag, index) => (
-          <span key={index} className="resource-tag">#{tag}</span>
-        ))}
-      </div>
+      {resource.tags && resource.tags.length > 0 && (
+        <div className="resource-tags">
+          {resource.tags.map((tag, index) => (
+            <span key={index} className="resource-tag">#{tag}</span>
+          ))}
+        </div>
+      )}
 
       <div className="resource-files">
-        {resource.pdfs.length > 0 && (
+        {/* PDF Files */}
+        {resource.pdfs && resource.pdfs.length > 0 && (
           <div className="file-section">
             <div className="file-header">
               <FaFilePdf className="file-icon pdf" />
@@ -57,10 +65,13 @@ const ResourceCard = ({ resource }) => {
             <div className="file-list">
               {resource.pdfs.map((pdf, index) => (
                 <div key={index} className="file-item">
-                  <span className="file-name">{pdf.filename}</span>
+                  <span className="file-name">
+                    {pdf.filename || `Document ${index + 1}`}
+                  </span>
                   <button 
                     className="download-btn"
                     onClick={() => handleDownload(pdf)}
+                    title="Download PDF"
                   >
                     <FaDownload />
                   </button>
@@ -70,19 +81,31 @@ const ResourceCard = ({ resource }) => {
           </div>
         )}
 
-        {resource.youtubeLinks.length > 0 && (
+        {/* YouTube Links */}
+        {resource.youtubeLinks && resource.youtubeLinks.length > 0 && (
           <div className="file-section">
             <div className="file-header">
               <FaYoutube className="file-icon video" />
               <span>Video Tutorials ({resource.youtubeLinks.length})</span>
             </div>
-            <div className="video-list">
+            <div className="youtube-links-list">
               {resource.youtubeLinks.map((video, index) => (
-                <div key={index} className="video-item">
-                  <div className="video-thumbnail">
-                    <FaYoutube className="video-placeholder" />
+                <div 
+                  key={index} 
+                  className="youtube-link-item"
+                  onClick={() => handleYouTubeClick(video.url)}
+                >
+                  <div className="youtube-link-content">
+                    <FaYoutube className="youtube-icon" />
+                    <div className="video-info">
+                      <strong>{video.title || `Video Tutorial ${index + 1}`}</strong>
+                      {video.description && (
+                        <p className="video-description">{video.description}</p>
+                      )}
+                      <span className="video-url">{video.url}</span>
+                    </div>
+                    <FaExternalLinkAlt className="external-icon" />
                   </div>
-                  <span className="video-title">Tutorial {index + 1}</span>
                 </div>
               ))}
             </div>
@@ -94,7 +117,7 @@ const ResourceCard = ({ resource }) => {
         <div className="resource-stats">
           <div className="stat">
             <FaStar className="stat-icon" />
-            <span>{resource.rating}</span>
+            <span>{resource.rating || 0}</span>
           </div>
           <div className="stat">
             <FaHeart 
@@ -105,13 +128,15 @@ const ResourceCard = ({ resource }) => {
           </div>
           <div className="stat">
             <FaEye className="stat-icon" />
-            <span>{resource.views}</span>
+            <span>{resource.views || 0}</span>
           </div>
         </div>
         
-        <div className="resource-author">
-          Added by {resource.addedBy.firstName} {resource.addedBy.lastName}
-        </div>
+        {resource.addedBy && (
+          <div className="resource-author">
+            Added by {resource.addedBy.firstName} {resource.addedBy.lastName}
+          </div>
+        )}
       </div>
     </div>
   );
