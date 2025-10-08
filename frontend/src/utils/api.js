@@ -116,4 +116,15 @@ export const getStudentBranches = (collegeId) =>
 export const getStudentYears = (collegeId, branchId) => 
   api.get(`/student/colleges/${collegeId}/branches/${branchId}/years`);
   
+// College-Branch Assignment APIs
+export const assignBranchToCollege = (collegeId, branchId) => 
+  api.post(`/admin/college/${collegeId}/branch/${branchId}`);
+
+export const removeBranchFromCollege = (collegeId, branchId) => 
+  api.delete(`/admin/college/${collegeId}/branch/${branchId}`);
+
+// Get all colleges (for admin)
+export const getColleges = () => 
+  api.get('/admin/colleges');
+
 export default api;
