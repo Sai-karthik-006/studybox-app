@@ -23,7 +23,7 @@ const BranchManagement = () => {
 
   // Available icons for branches
   const availableIcons = [
-    { value: 'FaCode', label: 'Code', icon: FaCode },
+    { value: 'FaCode', label: 'Code' },
     { value: 'FaLaptop', label: 'Laptop' },
     { value: 'FaRobot', label: 'AI/Robot' },
     { value: 'FaMicrochip', label: 'Microchip' },
@@ -86,7 +86,6 @@ const BranchManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching colleges:', error);
-      toast.error('Failed to load colleges');
     }
   };
 
@@ -158,6 +157,11 @@ const BranchManagement = () => {
     }
   };
 
+  const handleAssignClick = (branch) => {
+    setSelectedBranch(branch);
+    setShowAssignModal(true);
+  };
+
   const handleAssignToCollege = async (collegeId) => {
     try {
       const response = await assignBranchToCollege(collegeId, selectedBranch._id);
@@ -182,11 +186,6 @@ const BranchManagement = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to remove branch from college');
     }
-  };
-
-  const openAssignModal = (branch) => {
-    setSelectedBranch(branch);
-    setShowAssignModal(true);
   };
 
   const handleChange = (e) => {
@@ -215,7 +214,9 @@ const BranchManagement = () => {
 
   // Check if branch is assigned to a college
   const isBranchAssignedToCollege = (branch, collegeId) => {
-    return branch.colleges && branch.colleges.some(college => college._id === collegeId);
+    return branch.colleges && branch.colleges.some(college => 
+      college._id === collegeId || college === collegeId
+    );
   };
 
   if (loading) {
@@ -232,7 +233,7 @@ const BranchManagement = () => {
       <div className="management-header">
         <div className="header-left">
           <h2>Branch Management</h2>
-          <p>Manage engineering branches available in the system</p>
+          <p>Manage engineering branches and assign them to colleges</p>
         </div>
         <button 
           className="add-btn primary"
@@ -263,8 +264,7 @@ const BranchManagement = () => {
         <div className="table-header">
           <div className="col">Branch</div>
           <div className="col">Full Name</div>
-          <div className="col">Description</div>
-          <div className="col">Colleges</div>
+          <div className="col">Assigned Colleges</div>
           <div className="col">Appearance</div>
           <div className="col">Actions</div>
         </div>
@@ -290,33 +290,21 @@ const BranchManagement = () => {
               </div>
               
               <div className="col">
-                {branch.description || 'No description'}
-              </div>
-              
-              <div className="col">
                 <div className="colleges-list">
                   {branch.colleges && branch.colleges.length > 0 ? (
-                    <div className="assigned-colleges">
-                      {branch.colleges.slice(0, 3).map(college => (
-                        <span key={college._id} className="college-tag">
-                          {college.name}
-                          <button 
-                            className="unlink-btn"
-                            onClick={() => handleRemoveFromCollege(college._id)}
-                            title="Remove from college"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                      {branch.colleges.length > 3 && (
-                        <span className="more-colleges">
-                          +{branch.colleges.length - 3} more
-                        </span>
-                      )}
-                    </div>
+                    branch.colleges.map(college => (
+                      <span key={college._id || college} className="college-tag">
+                        {typeof college === 'object' ? college.name : 'College'}
+                        <button 
+                          className="remove-college"
+                          onClick={() => handleRemoveFromCollege(college._id || college)}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))
                   ) : (
-                    <span className="no-colleges">Not assigned</span>
+                    <span className="no-colleges">Not assigned to any college</span>
                   )}
                 </div>
               </div>
@@ -336,22 +324,22 @@ const BranchManagement = () => {
               <div className="col actions">
                 <button 
                   className="action-btn assign"
-                  onClick={() => openAssignModal(branch)}
-                  title="Assign to colleges"
+                  onClick={() => handleAssignClick(branch)}
+                  title="Assign to Colleges"
                 >
                   <FaLink />
                 </button>
                 <button 
                   className="action-btn edit"
                   onClick={() => handleEdit(branch)}
-                  title="Edit branch"
+                  title="Edit Branch"
                 >
                   <FaEdit />
                 </button>
                 <button 
                   className="action-btn delete"
                   onClick={() => handleDelete(branch._id)}
-                  title="Delete branch"
+                  title="Delete Branch"
                 >
                   <FaTrash />
                 </button>
@@ -483,24 +471,24 @@ const BranchManagement = () => {
         </div>
       )}
 
-      {/* Assign Branch to College Modal */}
+      {/* Assign to Colleges Modal */}
       {showAssignModal && selectedBranch && (
         <div className="modal-overlay">
-          <div className="modal medium-modal">
+          <div className="modal">
             <div className="modal-header">
               <h3>Assign Branch to Colleges</h3>
               <button onClick={closeAssignModal}>×</button>
             </div>
             
             <div className="modal-content">
-              <div className="selected-branch-info">
+              <div className="assign-branch-info">
                 <div 
                   className="branch-icon-preview"
                   style={{ backgroundColor: selectedBranch.color || '#4F46E5' }}
                 >
                   <FaCode />
                 </div>
-                <div>
+                <div className="branch-details">
                   <strong>{selectedBranch.name}</strong>
                   <span>{selectedBranch.fullName}</span>
                 </div>
@@ -513,48 +501,31 @@ const BranchManagement = () => {
                     <div key={college._id} className="college-item">
                       <div className="college-info">
                         <FaUniversity className="college-icon" />
-                        <div>
-                          <strong>{college.name}</strong>
-                          <span>{college.code} • {college.location}</span>
-                        </div>
+                        <span>{college.name} ({college.code})</span>
                       </div>
-                      
-                      <div className="college-actions">
+                      <button
+                        className={`assign-btn ${isBranchAssignedToCollege(selectedBranch, college._id) ? 'assigned' : 'not-assigned'}`}
+                        onClick={() => isBranchAssignedToCollege(selectedBranch, college._id) 
+                          ? handleRemoveFromCollege(college._id)
+                          : handleAssignToCollege(college._id)
+                        }
+                      >
                         {isBranchAssignedToCollege(selectedBranch, college._id) ? (
-                          <button 
-                            className="btn danger small"
-                            onClick={() => handleRemoveFromCollege(college._id)}
-                          >
+                          <>
                             <FaUnlink />
                             Remove
-                          </button>
+                          </>
                         ) : (
-                          <button 
-                            className="btn primary small"
-                            onClick={() => handleAssignToCollege(college._id)}
-                          >
+                          <>
                             <FaLink />
                             Assign
-                          </button>
+                          </>
                         )}
-                      </div>
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {selectedBranch.colleges && selectedBranch.colleges.length > 0 && (
-                <div className="current-assignments">
-                  <h4>Currently Assigned To</h4>
-                  <div className="assigned-colleges-list">
-                    {selectedBranch.colleges.map(college => (
-                      <span key={college._id} className="college-tag">
-                        {college.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="modal-actions">
